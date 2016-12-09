@@ -14,3 +14,6 @@ This is just an example how to login into moj.bob.si page using C#. You could do
 
 # PHP version
 Simple example of logging into moj.bob.si using curl - php. This version could be run on php hosting without modification.
+
+How to run:<br />
+-set username and password in script
