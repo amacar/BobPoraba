@@ -7,5 +7,5 @@ Swift version of BobPoraba app that runs on iOS devices. It has simple UI associ
 # C# console application
 This is just an example how to login into moj.bob.si page using C#. You could do some additional parsing to get more information about your account.
 
-# Php version
+# PHP version
 Simple example of logging into moj.bob.si using curl - php. This version could be run on php hosting without modification.

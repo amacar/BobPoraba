@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "FetchService.(getUsage(username : String, password : String, completionHandler : (String) -&gt; ()) -&gt; ()).(closure #1):FetchService.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "response.result.isFailure">
+            </PersistentString>
+            <PersistentString
+               value = "response.error">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DateTime.toString() -&gt; String:DateTime.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "Locale.current">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
