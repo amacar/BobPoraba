@@ -1,8 +1,8 @@
 # BobPoraba
-App for checking calls/sms/data usage for Slovenian carrier Bob. I have added login example for three common programming languages: swift, C# and php.
+App for checking calls/sms/data usage for Slovenian carrier Bob. I have added login example for three common programming languages: swift, C# and php. You can download it here: https://itunes.apple.com/si/app/bobmonitor/id577047787?mt=8
 
 # version for iOS (Swift)
-Swift version of BobPoraba app that runs on iOS devices. It has simple UI associated with carrier Bob colours.
+Swift version of BobPoraba app that runs on iOS devices. It has simple UI associated with carrier Bob colours. Download link: https://itunes.apple.com/si/app/bobmonitor/id577047787?mt=8
 <br />
 Screenshots:<br />
 ![Login](screenshots/login.png)
