@@ -102,13 +102,13 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 self.showLoader()
             }
             
-            FetchService().getUsage(username: username!, password: password!) {(usage) -> Void in
+            FetchService().getUsage(username: username!, password: password!) {(data) -> Void in
                 
                 let parseService = ParseService()
                 
                 // parse and save usage
                 do {
-                    try self.usageData = parseService.parseUsage(content: usage)
+                    try self.usageData = parseService.parseUsage(data: data)
                     PersistService().saveObject(object: self.usageData, saveKey: UsageProperty.classKey)
                     
                     //remove alert
