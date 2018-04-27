@@ -26,6 +26,7 @@ class FetchService {
                     
                     if response.result.isFailure {
                         completionHandler(nil)
+                        return
                     }
 
                     completionHandler(response.data)
