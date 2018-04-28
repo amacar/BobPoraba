@@ -57,6 +57,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         //fetch usage when open
         self.fetchUsage(nil)
     }
+	
+	override func viewDidLayoutSubviews() {
+		super.viewDidLayoutSubviews()
+		usageTableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: dateTimeLabel.frame.height, right: 0)
+	}
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -78,11 +83,13 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         cell.labelKey?.text = self.usageData[indexPath.row].getLabel()
         cell.labelValue?.text = self.usageData[indexPath.row].getValue()
         if(indexPath.row % 2 == 0){
-            cell.backgroundColor = UIColor.yellow
+            cell.backgroundColor = .yellow
+			cell.labelKey.textColor = .black
+			cell.labelValue.textColor = .black
         } else {
-            cell.backgroundColor = UIColor.black
-            cell.labelKey.textColor = UIColor.white
-            cell.labelValue.textColor = UIColor.white
+            cell.backgroundColor = .black
+            cell.labelKey.textColor = .white
+            cell.labelValue.textColor = .white
         }
         
         return cell
@@ -102,13 +109,13 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                 self.showLoader()
             }
             
-            FetchService().getUsage(username: username!, password: password!) {(usage) -> Void in
+            FetchService().getUsage(username: username!, password: password!) {(data) -> Void in
                 
                 let parseService = ParseService()
                 
                 // parse and save usage
                 do {
-                    try self.usageData = parseService.parseUsage(content: usage)
+                    try self.usageData = parseService.parseUsage(data: data)
                     PersistService().saveObject(object: self.usageData, saveKey: UsageProperty.classKey)
                     
                     //remove alert

@@ -6,59 +6,92 @@
 //  Copyright © 2016 Amadej Pevec. All rights reserved.
 //
 
+import Foundation
+
 class ParseService {
     
-    public func parseUsage(content: String) throws -> [UsageProperty]{
+    public func parseUsage(data: Data?) throws -> [UsageProperty]{
         var usageList = [UsageProperty]()
-        
-        guard let index = content.index(of: "<table id=\"usageCounter") else { throw ParseErrors.NotFound}
-        //get table
-        var table = content.substring(from: index)
-        table = table.substring(to: (table.index(of: "</table")!))
-        
-        //get tbody
-        var tbody = table[table.index(of: "<tbody")!...table.index(of: "</tbody")!]
-        
-        //get tr and td
-        var counter = 0
-        while let startIndex = tbody.index(of: "<tr") {
-            let endIndex = tbody.index(of: "</tr")
-            let tr = tbody[startIndex...endIndex!]
-            tbody = tbody.substring(from: tbody.index(endIndex!, offsetBy: 3))
-            
-            usageList.append(parseUsageProperty(trElement: tr, counter: counter))
-            counter += 1
-        }
-        
+		
+		guard let data = data else { throw ParseErrors.NotFound }
+		
+		var json : Any?
+		do {
+			json = try JSONSerialization.jsonObject(with: data, options: [])
+		} catch {
+			throw ParseErrors.NotFound
+		}
+		
+		guard let rootObject = json as? [String : Any],
+			let quickUsageViewModel = rootObject["quickUsageViewModel"] as? [String : Any],
+			let quickUsageModels = quickUsageViewModel["quickUsageModels"] as? [Any], quickUsageModels.count > 0,
+			let quickUsageModel = quickUsageModels[0] as? [String : Any],
+			let quickUsages = quickUsageModel["quickUsages"] as? [Dictionary<String, Any>],
+			let overviewUsagesKeys = quickUsageModel["overviewUsagesKeys"] as? [String] else {
+			throw ParseErrors.NotFound
+		}
+		
+		for usageKey in overviewUsagesKeys {
+			if let usageProperty = parseUsageProperty(key: usageKey, quickUsages: quickUsages) {
+				usageList.append(usageProperty)
+			}
+		}
+		
         return usageList
     }
     
-    private func parseUsageProperty(trElement: String, counter: Int) -> UsageProperty {
-        var parsableTrELement = trElement
-        var startIndex = parsableTrELement.index(of: "<td")
-        var endIndex = parsableTrELement.index(of: "</td")
-        let label = parsableTrELement[parsableTrELement.index(startIndex!, offsetBy: 4)...parsableTrELement.index(endIndex!, offsetBy: -1)]
-        
-        parsableTrELement = parsableTrELement.substring(from: parsableTrELement.index(endIndex!, offsetBy: 3))
-        startIndex = parsableTrELement.index(of: "<td")
-        endIndex = parsableTrELement.index(of: "</td")
-        let value = parsableTrELement[parsableTrELement.index(startIndex!, offsetBy: 4)...parsableTrELement.index(endIndex!, offsetBy: -1)]
-        
-        var suffix = ""
-        switch counter {
-        case 0, 1, 2:
-            suffix = "min"
-            break
-        case 3:
-            suffix = "sms"
-            break
-        case 4:
-            suffix = "MB"
-            break
-        default:
-            break
-        }
-        
-        return UsageProperty(label: label, value: value + suffix)
+	private func parseUsageProperty(key: String, quickUsages: [Dictionary<String, Any>]) -> UsageProperty? {
+		var usageDict : Dictionary<String, Any>?
+		var limitDict : Dictionary<String, Any>?
+		
+		for dict in quickUsages {
+			if let dictKey = dict["key"] as? String {
+				if dictKey == key {
+					usageDict = dict
+				} else if dictKey == "fu_\(key)" {
+					limitDict = dict
+				}
+				if usageDict != nil && limitDict != nil {
+					break
+				}
+			}
+		}
+		
+		guard let usage = usageDict, let limit = limitDict else {
+			return nil
+		}
+		
+		guard let label = usage["characteristicDescription"] as? String,
+			let usageValue = usage["value"] as? Double,
+			let usageUnit = usage["unit"] as? String,
+			let limitValue = limit["value"] as? Double,
+			let limitUnit = limit["unit"] as? String else {
+				return nil
+		}
+		
+		let formatter = NumberFormatter()
+		formatter.maximumFractionDigits = 2
+		
+		var usageValueString = String(format: "%.0f", usageValue)
+		var usageUnitString = usageUnit
+		
+		var limitValueString = String(format: "%.0f", limitValue)
+		var limitUnitString = limitUnit
+		
+		if usageUnit == "MB" && usageValue > 1024 {
+			let usageValueGb = usageValue / 1024
+			formatter.minimumFractionDigits = usageValueGb > 10 ? 0 : 2
+			usageValueString = formatter.string(from: NSNumber(value: usageValueGb))!
+			usageUnitString = "GB"
+		}
+		
+		if limitUnit == "MB" && limitValue > 1024 {
+			let limitValueGb = limitValue / 1024
+			formatter.minimumFractionDigits = limitValueGb > 10 ? 0 : 2
+			limitValueString = formatter.string(from: NSNumber(value: limitValueGb))!
+			limitUnitString = "GB"
+		}
+		
+		return UsageProperty(label: label, value: "\(usageValueString) \(usageUnitString) od \(limitValueString) \(limitUnitString)")
     }
 }

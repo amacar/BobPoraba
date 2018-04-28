@@ -10,32 +10,32 @@ import Alamofire
 
 class FetchService {
     
-    public func getUsage(username: String, password: String, completionHandler : @escaping ((_ usage : String) -> Void)) {
+    public func getUsage(username: String, password: String, completionHandler : @escaping ((_ usage : Data?) -> Void)) {
         
         Alamofire.request("https://moj.bob.si/").validate(statusCode: 200..<303).responseString{ response in
             
             if response.result.isFailure {
-                completionHandler("")
+                completionHandler(nil)
                 return
             }
             
             let content = response.result.value
             //already logged in
-            if content?.index(of: "moja telefonska") != nil {
-                Alamofire.request("https://moj.bob.si/racuni-in-poraba/stevec-porabe").validate(statusCode: 200..<303).responseString{ response in
+            if content?.index(of: "moje razmerje") != nil {
+                Alamofire.request("https://moj.bob.si/Home/GetUsageData").validate(statusCode: 200..<303).responseString{ response in
                     
                     if response.result.isFailure {
-                        completionHandler("")
+                        completionHandler(nil)
+                        return
                     }
 
-                    let content = response.result.value
-                    completionHandler(content!)
+                    completionHandler(response.data)
                 }
             } else if content?.index(of: "seja je potekla") != nil { //session expired
                 Alamofire.request("https://moj.bob.si/").validate(statusCode: 200..<303).responseString{ response in
                     
                     if response.result.isFailure {
-                        completionHandler("")
+                        completionHandler(nil)
                         return
                     }
                     
@@ -52,7 +52,7 @@ class FetchService {
         }
     }
     
-    private func login(username: String, password: String, content: String, completionHandler : @escaping ((_ content : String) -> Void)) {
+    private func login(username: String, password: String, content: String, completionHandler : @escaping ((_ content : Data?) -> Void)) {
         
         var parameters: Parameters = [
             "UserName": username,
@@ -66,21 +66,21 @@ class FetchService {
             let token = try self.getHiddenInput(content: content, inputName: "__RequestVerificationToken")
             parameters["__RequestVerificationToken"] = token
         } catch {
-            completionHandler("")
+            completionHandler(nil)
             return
         }
         
         Alamofire.request("https://prijava.bob.si/SSO/Login/Login", method: .post, parameters: parameters).validate(statusCode: 200..<303).responseString{ response in
             
             if response.result.isFailure {
-                completionHandler("")
+                completionHandler(nil)
                 return
             }
             
             Alamofire.request("https://moj.bob.si/").validate(statusCode: 200..<303).responseString{ response in
                 
                 if response.result.isFailure {
-                    completionHandler("")
+                    completionHandler(nil)
                     return
                 }
                 
@@ -94,19 +94,26 @@ class FetchService {
                     parameters["authTicket"] = authTicket
                     parameters["subscriberService"] = subscriberService
                 } catch {
-                    completionHandler("")
+                    completionHandler(nil)
                     return
                 }
                 
-                Alamofire.request("https://moj.bob.si/ssologin/login?returnUrl=/racuni-in-poraba/stevec-porabe", method: .post, parameters: parameters).validate(statusCode: 200..<303).responseString{ response in
+                Alamofire.request("https://moj.bob.si/ssologin?returnUrl=/", method: .post, parameters: parameters).validate(statusCode: 200..<303).responseString{ response in
                     
                     if response.result.isFailure {
-                        completionHandler("")
+                        completionHandler(nil)
                         return
                     }
-                    
-                    let content = response.result.value
-                    completionHandler(content!)
+					
+					Alamofire.request("https://moj.bob.si/Home/GetUsageData", method: .get, parameters: nil).validate(statusCode: 200..<303).responseString{ response in
+						
+						if response.result.isFailure {
+							completionHandler(nil)
+							return
+						}
+						
+						completionHandler(response.data)
+					}
                 }
             }
             
